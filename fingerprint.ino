@@ -1,5 +1,15 @@
 #include <Adafruit_Fingerprint.h>
 #include <WiFiClientSecure.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+#define pinMasuk 2
 
 // Replace with your network credentials (STATION)
 const char* ssid = "YOUR WIFI";
@@ -105,6 +115,23 @@ void setup()
   initWiFi();
   Serial.print("RSSI: ");
   Serial.println(WiFi.RSSI());
+
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+   delay(2000);
+  display.clearDisplay();
+
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 10);
+  // Display static text
+  display.println("Absensi...");
+  display.display(); 
+
+  pinMode(pinMasuk, OUTPUT);
+  digitalWrite(pinMasuk, LOW);
 }
 
 void loop()                     // run over and over again
@@ -177,6 +204,11 @@ uint8_t getFingerprintID() {
   // Serial.print("Found ID #"); Serial.print(finger.fingerID);
   // Serial.print(" with confidence of "); Serial.println(finger.confidence);
   if(finger.confidence>80){
+  digitalWrite(pinMasuk, HIGH);  
+  display.setCursor(0, 10);
+  // Display static text
+  display.println("ID="+String(finger.fingerID)+" sukses absen");
+  display.display();
     client.setInsecure();//skip verification
       if (!client.connect(server, 443))
         Serial.println("Connection failed!");
@@ -189,6 +221,9 @@ uint8_t getFingerprintID() {
         client.println();
         client.stop();
       }
+  delay(2000);
+  digitalWrite(pinMasuk, LOW);
+  display.clearDisplay();
   }
 
   return finger.fingerID;
