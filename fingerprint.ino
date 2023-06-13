@@ -3,7 +3,10 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_MLX90614.h>
 
+
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -147,6 +150,16 @@ void setup()
 
   pinMode(pinMasuk, OUTPUT);
   digitalWrite(pinMasuk, LOW);
+
+
+  Serial.println("Adafruit MLX90614 test");
+  if (!mlx.begin()) {
+    Serial.println("Error connecting to MLX sensor. Check wiring.");
+    while (1);
+  };
+
+  Serial.print("Emissivity = "); Serial.println(mlx.readEmissivity());
+  Serial.println("================================================");
 }
 
 void loop()                     // run over and over again
@@ -240,7 +253,7 @@ uint8_t getFingerprintID() {
       else {
         Serial.println("Connected to server!");
         // Make a HTTP request:
-        client.println("GET iot-absensi.ra-digital.xyz/bacasensor.php?ID="+String(finger.fingerID)+"&suhu=25");
+        client.println("GET iot-absensi.ra-digital.xyz/bacasensor.php?ID="+String(finger.fingerID)+"&suhu="+String(mlx.readObjectTempC()));
         client.println("Host: iot-absensi.ra-digital.xyz");
         client.println("Connection: keep-alive");
         client.println();
